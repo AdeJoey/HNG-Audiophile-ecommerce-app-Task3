@@ -1,72 +1,49 @@
-"use client";
-
-import { useParams } from "next/navigation";
-import { useQuery } from "convex/react";
+// app/product/[slug]/page.tsx
+import { fetchQuery } from "convex/nextjs";
 import { api } from "@/convex/_generated/api";
 import Image from "next/image";
+import { notFound } from "next/navigation";
+import { AddToCartButton } from "@/components/cart/AddToCartButton";
 
-export default function ProductPage() {
-  const { slug } = useParams();
-  const product = useQuery(api.products.getProductBySlug, { slug });
 
-  if (product === undefined) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <p className="text-gray-500 text-lg">Loading...</p>
-      </div>
-    );
-  }
+export default async function ProductPage({ params }: { params: Promise<{ slug: string }> }) {
+  // ✅ Await params (important for Next.js 14+)
+  const { slug } = await params;
 
-  if (product === null) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <p className="text-red-500 text-lg font-semibold">Product not found.</p>
-      </div>
-    );
+  console.log("✅ Received slug:", slug);
+
+  const product = await fetchQuery(api.products.getProductBySlug, { slug });
+
+  if (!product) {
+    notFound();
   }
 
   return (
-    <main className="max-w-6xl mx-auto px-4 py-10">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
+    <main className="max-w-6xl mx-auto px-4 py-16">
+      <div className="grid md:grid-cols-2 gap-10 items-center">
         <div className="flex justify-center">
-        
-
-<Image
-  src={product.image.desktop}
-  alt={product.name}
-  width={500}
-  height={500}
-  className="rounded-2xl shadow-lg object-cover"
-  unoptimized   // 👈 Add this line
-/>
-
+          <Image
+            src={product.image.desktop}
+            alt={product.name}
+            width={500}
+            height={500}
+            className="rounded-2xl object-cover shadow-lg"
+          />
         </div>
 
-        <div>
+        <div className="space-y-4 text-center md:text-left">
           {product.isNew && (
-            <p className="uppercase text-orange-500 tracking-widest mb-3">
-              New Product
-            </p>
+            <p className="text-orange-500 uppercase tracking-widest">New Product</p>
           )}
-          <h1 className="text-4xl font-bold mb-5 leading-tight">
-            {product.name}
-          </h1>
-          <p className="text-gray-600 mb-6 leading-relaxed">
-            {product.description}
-          </p>
-          <p className="text-2xl font-semibold mb-6">${product.price}</p>
-          <button className="bg-black text-white px-8 py-3 rounded-lg hover:bg-gray-800 transition">
-            Add to Cart
-          </button>
+          <h1 className="text-4xl font-bold">{product.name}</h1>
+          <p className="text-gray-600">{product.description}</p>
+          <p className="text-lg font-bold text-black">${product.price}</p>
+
+          <div className="mt-6">
+            <AddToCartButton product={product} />
+          </div>
         </div>
       </div>
-
-      <section className="mt-16">
-        <h2 className="text-2xl font-bold mb-4">Features</h2>
-        <p className="text-gray-700 leading-relaxed whitespace-pre-line">
-          {product.features}
-        </p>
-      </section>
     </main>
   );
 }

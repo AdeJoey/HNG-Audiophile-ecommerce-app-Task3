@@ -1,114 +1,88 @@
 "use client";
 
 import { useCart } from "@/hooks/useCart";
-import { X } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect } from "react";
 
-interface CartModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-}
-
-export function CartModal({ isOpen, onClose }: CartModalProps) {
-  const { items, updateQuantity, removeItem, clearCart, getTotalPrice } = useCart();
-
-  useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'unset';
-    }
-    return () => {
-      document.body.style.overflow = 'unset';
-    };
-  }, [isOpen]);
+export function CartModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
+  const { items, removeItem, clearCart, getTotalPrice } = useCart();
 
   if (!isOpen) return null;
 
   return (
-    <>
-      {/* Overlay */}
-      <div 
-        className="fixed inset-0 bg-black bg-opacity-40 z-40"
-        onClick={onClose}
-      />
+    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-end">
+      <div className="bg-white w-full max-w-md h-full p-6 overflow-y-auto relative">
+        {/* Close Button */}
+        <button
+          onClick={onClose}
+          className="absolute right-6 top-6 text-gray-500 hover:text-gray-700"
+          aria-label="Close cart"
+        >
+          ✕
+        </button>
 
-      {/* Modal */}
-      <div className="fixed top-[114px] right-6 tablet:right-10 desktop:right-[calc((100vw-1110px)/2)] z-50 bg-white rounded-lg p-8 w-[calc(100vw-48px)] max-w-[377px]">
-        <div className="flex items-center justify-between mb-8">
-          <h2 className="text-[18px] font-bold tracking-wider uppercase">
-            Cart ({items.length})
-          </h2>
-          {items.length > 0 && (
-            <button
-              onClick={clearCart}
-              className="text-black opacity-50 hover:text-brand-orange text-[15px] underline"
-            >
-              Remove all
-            </button>
-          )}
-        </div>
+        <h2 className="text-lg font-bold uppercase tracking-widest mb-6">
+          Cart ({items.length})
+        </h2>
 
         {items.length === 0 ? (
-          <div className="text-center py-8">
-            <p className="text-black opacity-50">Your cart is empty</p>
-          </div>
+          <p className="text-gray-500 text-center mt-10">Your cart is empty.</p>
         ) : (
           <>
             <div className="space-y-6 mb-8">
               {items.map((item) => (
-                <div key={item.slug} className="flex items-center gap-4">
-                  <div className="w-16 h-16 bg-light-gray rounded-lg overflow-hidden flex-shrink-0">
-                    <Image
-                      src={item.image}
-                      alt={item.name}
-                      width={64}
-                      height={64}
-                      className="w-full h-full object-cover"
-                    />
+                <div key={item._id} className="flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-4">
+                    <div className="relative w-16 h-16 rounded-lg overflow-hidden bg-gray-100">
+                      <Image
+                        src={item.image}
+                        alt={item.name}
+                        fill
+                        sizes="64px"
+                        className="object-cover"
+                      />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-[13px] leading-tight">{item.name}</p>
+                      <p className="text-gray-500 text-sm">$ {item.price}</p>
+                    </div>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-bold text-[15px] truncate">{item.name}</p>
-                    <p className="text-[14px] text-black opacity-50 font-bold">
-                      $ {item.price.toLocaleString()}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-4 bg-light-gray px-4 py-2">
-                    <button
-                      onClick={() => updateQuantity(item.slug, item.quantity - 1)}
-                      className="text-black opacity-50 hover:text-brand-orange font-bold text-[13px] w-4"
-                    >
-                      -
-                    </button>
-                    <span className="font-bold text-[13px] w-4 text-center">{item.quantity}</span>
-                    <button
-                      onClick={() => updateQuantity(item.slug, item.quantity + 1)}
-                      className="text-black opacity-50 hover:text-brand-orange font-bold text-[13px] w-4"
-                    >
-                      +
-                    </button>
-                  </div>
+
+                  <button
+                    onClick={() => removeItem(item._id)}
+                    className="text-gray-400 hover:text-brand-orange text-lg"
+                    aria-label="Remove item"
+                  >
+                    ×
+                  </button>
                 </div>
               ))}
             </div>
 
-            <div className="flex items-center justify-between mb-6">
-              <span className="text-[15px] text-black opacity-50 uppercase">Total</span>
-              <span className="text-[18px] font-bold">$ {getTotalPrice().toLocaleString()}</span>
+            {/* Total and Buttons */}
+            <div className="flex justify-between mb-6">
+              <span className="text-gray-500 uppercase text-sm tracking-widest">Total</span>
+              <span className="text-lg font-bold">$ {getTotalPrice()}</span>
             </div>
 
-            <Link
-              href="/checkout"
-              onClick={onClose}
-              className="btn-primary w-full text-center block"
-            >
-              Checkout
-            </Link>
+            <div className="flex flex-col gap-3">
+              <button
+                onClick={clearCart}
+                className="border border-gray-300 py-3 rounded-lg uppercase text-sm hover:bg-gray-100"
+              >
+                Clear Cart
+              </button>
+              <Link
+                href="/checkout"
+                onClick={onClose}
+                className="text-center bg-brand-orange hover:bg-orange-600 text-white py-3 rounded-lg uppercase text-sm font-semibold tracking-wider"
+              >
+                Checkout
+              </Link>
+            </div>
           </>
         )}
       </div>
-    </>
+    </div>
   );
 }
